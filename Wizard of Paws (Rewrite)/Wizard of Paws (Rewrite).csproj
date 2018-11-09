@@ -6,4 +6,10 @@
     <RootNamespace>Wizard_of_Paws__Rewrite_</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta" />
+  </ItemGroup>
+
 </Project>
