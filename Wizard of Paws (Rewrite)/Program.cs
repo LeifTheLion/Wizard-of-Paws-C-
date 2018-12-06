@@ -35,7 +35,7 @@ namespace WizardBot
             //WizardBot.Log += Log;
             WizardBot.MessageReceived += CommandMessageReceived;
 
-            await WizardBot.LoginAsync(TokenType.Bot, "");
+            await WizardBot.LoginAsync(TokenType.Bot, "NTEwMzAwNjAwMDg5NDQ0MzYy.DsaWTw.pKXcyk6DAsALvpsRsfFcZVupq1c");
             await WizardBot.StartAsync();
 
             // Block this task until the program is closed.
@@ -68,7 +68,6 @@ namespace WizardBot
                     Description = result.ErrorReason,
                     Color = new Color(255, 175, 215),
                     Timestamp = DateTimeOffset.UtcNow,
-                    ThumbnailUrl = "https://mbtskoudsalg.com/images/error-transparent-4.png",
                 };
 
                 await context.Channel.SendMessageAsync("", false, embed.Build());
