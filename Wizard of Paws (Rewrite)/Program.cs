@@ -3,22 +3,30 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+
 //Built by Leif using Discord.Net
 namespace WizardBot
 {
+
     class Program
     {
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
 
+        Dictionary<string, string> botSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(@"D:\Kitty\Documents\GitHub\Wizard of Paws (Rewrite)\Wizard of Paws (Rewrite)\config.json"));
+        
 
         DiscordSocketClient WizardBot;
         IServiceProvider _services;
         CommandService _commands;
-        readonly char _cmdPrefix = '>';
         readonly Random rnd = new Random();
+        
+
         Color RandomColor() => new Color(rnd.Next(256), rnd.Next(256), rnd.Next(256));
 
         public async Task MainAsync()
@@ -35,7 +43,7 @@ namespace WizardBot
             //WizardBot.Log += Log;
             WizardBot.MessageReceived += CommandMessageReceived;
 
-            await WizardBot.LoginAsync(TokenType.Bot, "");
+            await WizardBot.LoginAsync(TokenType.Bot, botSettings["TOKEN"]);
             await WizardBot.StartAsync();
 
             // Block this task until the program is closed.
@@ -51,9 +59,9 @@ namespace WizardBot
             // Don't process the message if it was from the bot
             if (message.Author.Id == WizardBot.CurrentUser.Id) return;
             // Create a number to track where the prefix ends and the command begins
-            int argPos = 0;
-            // Determine if the message is a command based on if it starts with '>'
-            if (!message.HasCharPrefix(_cmdPrefix, ref argPos)) return;
+            int argPos = 2;
+            // Determine if the message is a command based on if it starts with the prefix
+            if (!message.Content.StartsWith(botSettings["PREFIX"])) return;
             // Create a Command Context
             var context = new SocketCommandContext(WizardBot, message);
             // Execute the command. (result does not indicate a return value, rather an object stating if the command executed successfully)
