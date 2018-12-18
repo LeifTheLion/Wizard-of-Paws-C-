@@ -1,92 +1,61 @@
-﻿using Discord;
+﻿using System;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+using WizardOfPaws.Configuration;
+using WizardOfPaws.Debug;
+using WizardOfPaws.Modules;
 
 //Built by Leif using Discord.Net
-namespace WizardBot
+namespace WizardOfPaws
 {
 
-    class Program
-    {
-        public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
+	public class Program
+	{
+		public static void Main(string[] args)
+			=> new Program().MainAsync().GetAwaiter().GetResult();
 
-        Dictionary<string, string> botSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(@"D:\Kitty\Documents\GitHub\Wizard of Paws (Rewrite)\Wizard of Paws (Rewrite)\config.json"));
-        
+		private DiscordSocketClient _instance;
+		public static IServiceProvider Services;
+		private CommandService _commands;
+		private Logger _logger = new Logger();
+		private Logger _discordLogger = new Logger();
+		private CoreConfiguration _config;
 
-        DiscordSocketClient WizardBot;
-        IServiceProvider _services;
-        CommandService _commands;
-        readonly Random rnd = new Random();
-        
+		private async Task MainAsync()
+		{
+			try
+			{
+				this._config = ConfigurationManager.Load<CoreConfiguration>("core.json");
 
-        Color RandomColor() => new Color(rnd.Next(256), rnd.Next(256), rnd.Next(256));
+				this._logger = new Logger(_config.LogLevel);
+				this._discordLogger = new Logger(_config.LogLevel, "Discord");
+				this._instance = new DiscordSocketClient();
+				this._commands = new CommandService(new CommandServiceConfig { DefaultRunMode = RunMode.Async });
+				await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+				Program.Services = new ServiceCollection()
+					.AddSingleton(_instance)
+					.AddSingleton(_commands)
+					.AddSingleton(new CommandModule(_config))
+					.BuildServiceProvider();
 
-        public async Task MainAsync()
-        {
-            WizardBot = new DiscordSocketClient();
+				_instance.Log += msg => this._discordLogger.Log(msg.Message, msg.Severity);
+				_instance.MessageReceived += ((CommandModule)Program.Services.GetService(typeof(CommandModule))).CommandMessageReceived;
 
-            _commands = new CommandService(new CommandServiceConfig() { DefaultRunMode = RunMode.Async });
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
-            _services = new ServiceCollection()
-                .AddSingleton(WizardBot)
-                .AddSingleton(_commands)
-                .BuildServiceProvider();
+				await _instance.LoginAsync(TokenType.Bot, _config.BotToken);
+				await _instance.StartAsync();
 
-            //WizardBot.Log += Log;
-            WizardBot.MessageReceived += CommandMessageReceived;
-
-            await WizardBot.LoginAsync(TokenType.Bot, botSettings["TOKEN"]);
-            await WizardBot.StartAsync();
-
-            // Block this task until the program is closed.
-            await Task.Delay(-1);
-        }
-
-
-
-        async Task CommandMessageReceived(SocketMessage arg)
-        {
-            // Don't process the message if it was a System message
-            if (!(arg is SocketUserMessage message)) return;
-            // Don't process the message if it was from the bot
-            if (message.Author.Id == WizardBot.CurrentUser.Id) return;
-            // Create a number to track where the prefix ends and the command begins
-            int argPos = 2;
-            // Determine if the message is a command based on if it starts with the prefix
-            if (!message.Content.StartsWith(botSettings["PREFIX"])) return;
-            // Create a Command Context
-            var context = new SocketCommandContext(WizardBot, message);
-            // Execute the command. (result does not indicate a return value, rather an object stating if the command executed successfully)
-            IResult result = await _commands.ExecuteAsync(context, argPos);
-            if (!result.IsSuccess)
-            {
-                Console.WriteLine(result.ErrorReason);
-                var embed = new EmbedBuilder()
-                {
-                    Title = "Error: Couldn't execute command ",
-                    //Author = { Name = context.User.Username },
-                    Description = result.ErrorReason,
-                    Color = new Color(255, 175, 215),
-                    Timestamp = DateTimeOffset.UtcNow,
-                };
-
-                await context.Channel.SendMessageAsync("", false, embed.Build());
-            }
-            /*
-            Task Log(LogMessage msg)
-            {
-                Console.WriteLine(msg.ToString());
-                return Task.CompletedTask;
-            }
-            */
-        }
-    }
+				// Block this task until the program is closed.
+				await Task.Delay(-1);
+			}
+			catch (FileNotFoundException exception)
+			{
+				await this._logger.Critical(exception.Message + " | File: " + exception.FileName);
+			}
+		}
+	}
 }

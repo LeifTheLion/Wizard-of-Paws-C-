@@ -1,12 +1,12 @@
-﻿using Discord;
-using Discord.Commands;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using Newtonsoft.Json;
 
-namespace WizardBot
+namespace WizardOfPaws
 {
     public class Core : ModuleBase<SocketCommandContext>
     {

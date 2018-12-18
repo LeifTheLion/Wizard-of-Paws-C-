@@ -1,15 +1,10 @@
-﻿using Discord;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using ModuleHelper;
-using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 
-namespace WizardBot
+namespace WizardOfPaws
 {
     public class Moderation : ModuleBase<SocketCommandContext>
     {

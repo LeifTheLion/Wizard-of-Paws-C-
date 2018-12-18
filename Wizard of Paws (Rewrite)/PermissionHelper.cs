@@ -2,7 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace ModuleHelper
+namespace WizardOfPaws
 {
     internal class PermissionHelper
     {
